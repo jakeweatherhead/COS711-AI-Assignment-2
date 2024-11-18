@@ -1,0 +1,238 @@
+\section{EXPERIMENTAL SET-UP}
+
+% In this section you discuss how you approached, implemented and solved your assignment.
+% Mention the values considered for the hyperparameters, how many simulations you have
+% run, etc. After reading this section (in addition to the background) the reader should be
+% able to replicate your experiments to obtain similar results to those obtained by you. Be
+% very specific in your discussions in this section.
+
+The described neural network was built using PyTorch version 2.4.0+cu121 and trained
+on a local RTX GeForce 3080 Ti graphics processing unit. The Pandas module was used
+for data manipulation and, as will be explained later, SciKit-Learn's K-Nearest
+Neighbors imputer was used to impute the missing values. To ensure reproducibility 
+of results across simulations, a random value of 42 was used to seed PyTorch before any operations were 
+executed in code.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data Preprocessing}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The first task was to gain an understanding of the characteristics
+and limitations of the dataset in order to be able to preprocess the data. 
+Missing values were detected with the following frequencies:
+
+\begin{table}[h]
+    \label{table_feature_values}
+    \begin{center}
+    \begin{tabular}{|c||c|c|}
+    \hline
+    \textbf{Feature} & \textbf{Missing Values} & \textbf{Proportion (\%)} \\
+    \hline
+    Length (major axis) & 857 & 30.57\% \\
+    \hline
+    Width (minor axis) & 942 & 33.61\% \\
+    \hline
+    Thickness (depth) & 1004 & 35.82\% \\
+    \hline
+    Area & 0 & 0\% \\
+    \hline
+    Perimeter & 0 & 0\% \\
+    \hline
+    Roundness & 857 & 30.57\% \\
+    \hline
+    Solidity & 0 & 0\% \\
+    \hline
+    Compactness & 0 & 0\% \\
+    \hline
+    \textbf{Aspect Ratio} & \textbf{1799} & \textbf{64.18\%} \\
+    \hline
+    \textbf{Eccentricity} & \textbf{1799} & \textbf{64.18\%} \\
+    \hline
+    Extent & 0 & 0\% \\
+    \hline
+    Convex hull (convex area) & 0 & 0\% \\
+    \hline
+    Type & 0 & 0\% \\
+    \hline
+    \end{tabular}
+    \end{center}
+    \end{table} \vspace{-0.5em}
+
+Due to the high frequency of missing values in \textbf{Aspect Ratio} and
+\textbf{Eccentricity}, these two features were dropped from the dataset.
+
+Missing values in the remaining features were imputed using a K-Nearest Neighbour imputer
+provided out-of-the-box by SciKit-Learn, which preserved the underlying ditributions of each feature as verified by plots and kurtosis
+values generated before and after imputation.
+
+Outliers were detected using the inter-quartile range method, which identifies outliers as data points 
+greater than 1.5 times the interquartile range (IQR) above the third quartile or less 
+than 1.5 times the IQR below the first quartile. The following table enumerates the frequency
+of outliers per feature:
+
+\begin{table}[h]
+    \label{table_feature_values}
+    \begin{center}
+    \begin{tabular}{|c||c|c|}
+    \hline
+    \textbf{Feature} & \textbf{Value} & \textbf{Proportion (\%)} \\
+    \hline
+    Length (major axis) & 16 & 0.57\% \\
+    \hline
+    Width (minor axis) & 9 & 0.32\% \\
+    \hline
+    Thickness (depth) & 22 & 0.78\% \\
+    \hline
+    Area & 87 & 3.10\% \\
+    \hline
+    Perimeter & 61 & 2.18\% \\
+    \hline
+    Roundness & 0 & 0\% \\
+    \hline
+    Solidity & 208 & 7.42\% \\
+    \hline
+    Compactness & 209 & 7.46\% \\
+    \hline
+    Extent & 112 & 3.99\% \\
+    \hline
+    Convex hull (convex area) & 89 & 3.17\% \\
+    \hline
+    \end{tabular}
+    \end{center}
+    \end{table}
+
+The influence of outliers in all features was mitigated using the $Z$-score scaling method 
+where each feature-value $X_f$ in all features $F$ underwent the following transformation:
+
+$$
+X_f \; \rightarrow \; Z_f 
+\; = \; \frac{X_f - \mu_F}{\sigma_F} 
+$$
+
+The almond-type label was encoded using three-way class indexing where $0$ represented Mamra almonds, 
+$1$ represented Sonora almonds, and $2$ represented Regular almonds.
+
+Class-indexing was chosen because it directly aligns each of the three output layer neurons with a 
+specific almond type, making class indexing ideal for generating clear and interpretable probabilities 
+with the softmax function.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Architecture Selection}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The chosen network architecture followed a pyramidal structure, gradually
+compressing data across its layers on each forward pass.
+
+The input layer contained ten neurons, one for each input feature in the preprocessed 
+dataset, followed by a hidden layer with 20 neurons, a second 
+hidden layer with 29 neurons, a third hidden layer with 19 neurons and a final
+fourth hidden layer with 13 neurons. Finally, the output layer had three
+neurons, corresponding to the three almond-types.
+
+Each hidden layer neuron was activated using the sigmoid 
+activation function and the output layer was activated using the softmax activation function.
+
+Although this architecture demonstrated 
+effectiveness, it is likely that with additional experimentation, computational 
+resources and a more sophisticated procedure of architecture selection, 
+a more optimal design could be found.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Weights and Biases}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+All weights in the network were initialized using PyTorch's Xavier uniform initialization function 
+and a random state of 42. All biases were set to a small positive constant of 0.01.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Activation Function}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Sigmoid was utilized in the hidden layers 
+to introduce non-linearity and differentiability for backpropogation. It scales
+the output of each neuron to a range between zero and one, which is  
+useful for models that rely on probabilistic interpretations of 
+neuronal outputs. 
+
+For the output layer, the softmax
+converted 
+the raw output logits into three probabilities, one for each almond-type, 
+that sum to one. The output neuron with the highest probability score was 
+taken as the model's classification for the almond instance.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Learning Rate \& Number of Epochs}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The learning rate ($\eta$), a hyperparameter that influences how a model updates its free 
+parameters during training, was evaluated under three different setups. 
+
+Initially, a constant $\eta = 0.007$ was used across all epochs. Subsequently, PyTorch's exponential decay 
+learning rate scheduler was used, decreasing $\eta$ as the number of epochs increased. 
+
+However, 
+the most effective strategy proved to be the Cosine Annealing Warm Restarts (CAWR) provided 
+by PyTorch, which periodically resets $\eta$, with the first reset at the tenth epoch and 
+subsequent resets doubling the epoch count ($T_0 = 10, \, T_{mult} = 2$). 
+
+The optimal 
+initial $\eta$ for CAWR, set at 0.007, was determined through grid search and fine-tuning.
+
+Regarding epoch counts, a grid search indicated that fewer epochs might be more effective. 
+After further trials and adjustments, the optimal number of epochs was established at 600.
+
+
+% The learning rate ($\eta$), a hyperparameter that controls how 
+% quickly a model adjusts its free parameters during training, was 
+% tested in three configurations. First, a manually-configured constant $\eta = 0.007$
+% was applied to all training epochs. Second, PyTorch's exponential decay learning-rate scheduler was implemented, 
+% where $\eta$ decreased exponentially as the number of 
+% completed epochs increased. Lastly, PyTorch's Cosine Annealing Warm 
+% Restarts (CAWR) learning rate scheduler was used without modification.
+% With CAWR, $\eta$ is periodically reset in what are known as warm-restarts, with resets 
+% occurring at progressively longer intervals as specified in the model's configuration.
+% This study set the first warm-restart to happen on the tenth epoch, with
+% subsequent restarts occuring at an epoch count double the value of the previous
+% epoch on which a restart occurred ($T_0 = 10, \, T_{mult} = 2$). CAWR also takes an initial $\eta$ which was obtained
+% via a grid-search and subsequent fine-tuning. The optimal initial learning rate, provided to CAWR was 0.007.
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \subsection{Number of Epochs and Simulations}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% A grid search, reported on in the results section,
+% was applied to find potentially-optimal epoch counts. The most promising 
+% epoch counts were manually tested and after additional fine-tuning a final 
+% optimal value for the number of epochs was found to be 600. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data Augmentation (Gretel.AI)}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Having read \cite{sun2017revisitingunreasonableeffectivenessdata}, 
+it was deemed worthwhile to trial the augmentation of the training set with 20,000 additional rows of synthetic data using 
+the online tool from Gretel AI: Navigator Fine-Tuning \cite{Gretel.ai}. 
+
+The synthetic data were generated over two separate runs using the same preprocessed version of 
+the original dataset as context, where the first run generated 5,000 new rows of data 
+and the second run generated 15,000. 
+
+The synthetic data were used exclusively for training and never for validation or testing as the synthetic dataset likely
+deviates from reality in its representations of almonds. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Train, Validation, and Test Data}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Splitting the dataset into training, validation and test sets was performed using
+SciKit-Learn's train\_test\_split function using a random seed of 711.
+
+First, the preprocessed dataset, excluding synthetic data, was split along an 80\%-20\% partition.
+
+The 20\% portion was then divided equally among the validation and test sets each of which comprised 
+10\% of the preprocessed dataset. 
+
+Finally, the synthetic data were vertically concatenated below the original 80\% partition
+to form a training dataset of 22,242 rows, a validation set of $280\pm1$ rows and a test set 
+of $280\pm1$ rows. No further splitting or data augmentation occurred. A batch-size of 64 was used.
+All claims of configuration-superiority will be statistically motivated in the subsequent section.

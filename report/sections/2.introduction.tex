@@ -1,0 +1,34 @@
+\section{INTRODUCTION}
+
+The given dataset contains 2,803 almond instances in CSV format, each described by length, width, and other size-related metrics recorded from a 
+previous collection of almond images. The task was to build a neural network that could accurately classify almond 
+instances into one of three types—Mamra, Sonora, and Regular. This required iterative experimentation and fine-tuning to minimize loss and overfitting 
+and maximize accuracy on unseen test cases.
+
+After reviewing the findings in \cite{sun2017revisitingunreasonableeffectivenessdata}, which detail the effectiveness of large-scale datasets 
+for training neural networks, it was decided to augment the original dataset with 20,000 additional rows of synthetic data. As will be shown, 
+this augmentation resulted in significant improvements in the classifier's performance when tested 
+on unseen almonds from the original dataset of real-world observations.
+
+Initially, the characteristics of the original dataset were analyzed and it was found that the three almond types are evenly represented, 
+with virtually no skew toward any particular almond-type. Then, the per-feature value distributions were visualized to establish a baseline to adhere to
+when imputing missing values. Additionally, the number of missing values and outliers per feature was recorded.
+
+The chosen method of mitigating outliers was the $Z$-score method, which was found to have the greatest benefit on performance amongst the
+options for handling outliers. Missing values 
+were handled using K-nearest neighbours imputation, which proved effective in providing the model with more complete training information while 
+also preserving the underlying distribution of the affected feature.
+
+After preprocessing the data, an optimal architecture was selected via cross-validation and the hyperparameters were fine-tuned to maximize 
+performance on the validation set.
+
+At the core of this report, a hybrid learning implementation was developed that allowed the averaging of two or more optimization algorithms used in tandem. 
+By averaging their outputs, updates to the network proved more effective than when any single optimization algorithm was used on its own. 
+As will be discussed in a subsequent section, using Adam and RProp in this hybrid implementation maximized the model's performance on unseen almond cases.
+
+A grid search was performed across various learning rates and epoch counts to gain insight into configurations that might yield optimal 
+performance on unseen data. 
+
+A final round of manual fine-tuning led to the best observed performance accuracy on unseen test data, reported on in a later section.
+
+% \subsection{Add subsections with this}

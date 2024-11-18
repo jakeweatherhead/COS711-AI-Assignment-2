@@ -1,0 +1,236 @@
+% Prompt: A very high level discussion on the problem domain and the algorithms and/or approaches
+% that you have used. This section is typically where the “base cases” of concepts that appear
+% throughout the remainder of your report are discussed. It is also an ideal place to refer a
+% reader to other sources containing relevant information on the topic which is outside the
+% scope of your assignment. Remember to discuss very generally. After reading this section
+% the marker should be able to determine whether or not you understand the techniques
+% that you are using. Try to limit this section to 1 page maximum. Make sure you reference
+% the relevant sources when discussing the building blocks of your project.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{BACKGROUND}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Accurate and automated almond classification helps to streamline agricultural sorting processes, 
+directly impacting the quality of products delivered to consumers. By leveraging neural 
+networks, it is possible to classify almond types—Mamra, Sanora, and Regular—with significantly higher 
+accuracy and efficiency than a human. Neural networks can not only increase operational 
+speed but also reduce human errors in harvesting and distribution.
+
+Neural networks are ideal for almond-classification due to their capacity to model complex, non-linear 
+relationships between input features and target labels. This study explores the use of a feedforward neural 
+network for almond classification, utilising ten numeric features derived from a previous dataset of 
+two-dimensional almond images. These features 
+capture geometric properties of the almonds, such as length, width, and thickness, which form the basis for 
+classification. Given the challenges posed by missing values and the variety of feature scales, data 
+preprocessing played a crucial role in ensuring the neural network could effectively learn meaningful 
+patterns from the data.
+
+The primary objective of this report is to evaluate and compare three gradient-based training algorithms: 
+Resilient Backpropagation (RProp) \cite{298623}, Adam (Adaptive Moment Estimation) \cite{kingma2017adammethodstochasticoptimization}, 
+and Root Mean Square propogation (RMSProp) \cite{hinton2012rmsprop}
+when used individually and together in hybrid-learning pairs. 
+
+RMSProp adjusts the learning rate for each parameter based on the average of 
+recent squared gradients, effectively preventing the oscillations that can occur with standard gradient descent. 
+This allows for better convergence, particularly in problems with non-stationary objectives.
+
+RProp focuses on the sign of the gradient rather than its magnitude, adjusting the 
+step size for each weight individually based on whether the gradient's sign changes. This approach avoids issues 
+related to vanishing or exploding gradients, improving the training process for certain types of networks.
+
+Adam combines the benefits of RMSProp and momentum by computing both running 
+averages of the gradient and its square. It adapts the learning rate for each parameter, leading to faster 
+convergence and better performance in practice across a wide range of problems.
+
+A crucial aspect of building an effective neural network is the initialisation of weights and biases. 
+Proper initialisation can significantly impact the model’s ability to converge and avoid issues such 
+as vanishing or exploding gradients, which can hinder learning in deeper networks. In this study, we 
+uniform-Xavier weights initialisation was implemented, which ensures that the initial values are scaled to avoid 
+large or small gradients during backpropagation. Bias terms are initialised to small non-zero values to 
+provide an offset for the hyperplane that the model iteratively constructs and improves, ensuring that 
+the model does not prematurely squash activations in the early stages 
+of training. This careful initialisation is essential for setting the network on a path to stable and 
+efficient learning, reducing the likelihood of poor convergence or suboptimal performance and had great bearing on the
+performance results observed.
+
+To enable the neural network to differentiate between the three almond types, CrossEntropy loss was employed 
+as the loss function. CrossEntropy is well-suited for multi-class classification problems 
+as it measures the performance of a classification model whose output is a probability value between 0 and 1. 
+It penalises incorrect classifications more harshly than other loss functions, encouraging the network to 
+improve over successive iterations by optimising the weight adjustments.
+
+The network's architecture uses the sigmoid activation function for its hidden layers. sigmoid is a common 
+activation function in feedforward networks, which transforms input values into an output range between 0 
+and 1. Its non-linearity allows the network to learn complex relationships, but its tendency to cause 
+vanishing gradients must be carefully managed, especially when deeper networks are used. For the final 
+layer, the softmax activation function is employed. softmax transforms the outputs of the network into 
+a probability distribution over the three almond classes, ensuring that the sum of the outputs is equal 
+to 1. This makes it particularly effective for multi-class classification, as it allows the model to assign 
+higher confidence scores to the correct class and lower probabilities to the incorrect ones.
+
+In this study, the performance of the neural network across different configurations is assessed, focusing 
+on both training and testing accuracy, as well as the stability of convergence. A critical part of the 
+evaluation involves running multiple independent simulations to compute averages and standard deviations 
+for each optimizer and the hybrid approach. This analysis will include K-fold cross-validation to ensure 
+that the model generalizes well across different subsets of the data.
+
+By combining RProp and Adam in a hybrid-learning approach, along with leveraging CrossEntropy loss and 
+appropriate activation functions like sigmoid and softmax, we aim to improve the model’s classification 
+performance. The comparison of these optimizers and their hybrid will provide insights into their relative 
+strengths and weaknesses, potentially leading to more efficient training procedures in neural network models 
+applied to agricultural classification tasks.
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \subsection{Data Preprocessing}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% The first task was to gain an understanding of the characteristics
+% and limitations of the dataset. Missing values were detected with
+% the following frequencies:
+
+% \begin{table}[h]
+%     \label{table_feature_values}
+%     \begin{center}
+%     \begin{tabular}{|c||c|c|}
+%     \hline
+%     \textbf{Feature} & \textbf{Missing Values} & \textbf{Proportion (\%)} \\
+%     \hline
+%     Length (major axis) & 857 & 30.57\% \\
+%     \hline
+%     Width (minor axis) & 942 & 33.61\% \\
+%     \hline
+%     Thickness (depth) & 1004 & 35.82\% \\
+%     \hline
+%     Area & 0 & 0\% \\
+%     \hline
+%     Perimeter & 0 & 0\% \\
+%     \hline
+%     Roundness & 857 & 30.57\% \\
+%     \hline
+%     Solidity & 0 & 0\% \\
+%     \hline
+%     Compactness & 0 & 0\% \\
+%     \hline
+%     Aspect Ratio & 1799 & 64.18\% \\
+%     \hline
+%     Eccentricity & 1799 & 64.18\% \\
+%     \hline
+%     Extent & 0 & 0\% \\
+%     \hline
+%     Convex hull (convex area) & 0 & 0\% \\
+%     \hline
+%     Type & 0 & 0\% \\
+%     \hline
+%     \end{tabular}
+%     \end{center}
+%     \end{table} \vspace{-0.5em}
+% Due to the high frequency of missing values in the \textbf{Aspect Ratio} and
+% \textbf{Eccentricity} features, the model was trained with these 
+% features excluded.
+
+% Missing values in the remaining features were imputed using the feature's mean,
+% which provided more complete data for the model to train on and preserved the
+% underlying ditributions of each feature as verified by plots and kurtosis
+% values generated before and after imputation.
+
+% Outliers were detected using the inter-quartile range method with the following 
+% frequencies:
+
+% \begin{table}[h]
+%     \label{table_feature_values}
+%     \begin{center}
+%     \begin{tabular}{|c||c|c|}
+%     \hline
+%     \textbf{Feature} & \textbf{Value} & \textbf{Proportion (\%)} \\
+%     \hline
+%     Length (major axis) & 16 & 0.57\% \\
+%     \hline
+%     Width (minor axis) & 9 & 0.32\% \\
+%     \hline
+%     Thickness (depth) & 22 & 0.78\% \\
+%     \hline
+%     Area & 87 & 3.10\% \\
+%     \hline
+%     Perimeter & 61 & 2.18\% \\
+%     \hline
+%     Roundness & 0 & 0\% \\
+%     \hline
+%     Solidity & 208 & 7.42\% \\
+%     \hline
+%     Compactness & 209 & 7.46\% \\
+%     \hline
+%     Aspect Ratio & 53 & 1.89\% \\
+%     \hline
+%     Eccentricity & 8 & 0.29\% \\
+%     \hline
+%     Extent & 112 & 3.99\% \\
+%     \hline
+%     Convex hull (convex area) & 89 & 3.17\% \\
+%     \hline
+%     \end{tabular}
+%     \end{center}
+%     \end{table}
+
+% The disproportionate influence of outliers was mitigated
+% using the $Z$-score scaling method where each value $X_f$ for every feature $F$ was transformed by:
+
+% $$
+% X_f \; \rightarrow \; Z_f \; = \; \frac{X_f - \mu_F}{\sigma_F} \;\;\;\;\;\; \forall X_f \in F
+% $$
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \subsection{Architecture Selection}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% The network architecture follows a pyramidal structure, gradually
+% compressing the data across its layers, which was found to be 
+% optimal through cross-validation against other less optimal architectures. 
+% Although this architecture demonstrated 
+% effectiveness, it is likely that with additional time, computational 
+% resources and a more formal procedure for architecture selection, 
+% a more optimal design could be found.
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \subsection{Activation functions}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% The sigmoid activation function was utilised in the hidden layers 
+% to introduce non-linearity and differentiability for backpropogation, 
+% allowing the model to capture complex relationships in the data by scaling 
+% the output of each neuron to a range between 0 and 1, which is especially 
+% useful for models, like the one in this study, that rely on probabilistic interpretations of 
+% neuronal outputs. For the output layer, the softmax activation 
+% function was employed to assist in classifying the almonds into the
+% three distinct almond types. softmax converts 
+% the raw outputs into probabilities that sum to 1, 
+% enabling the model to make a confident prediction for each input 
+% by selecting the class with the highest probability. This combination 
+% of sigmoid and softmax activation functions allowed the model to 
+% learn complex patterns while ensuring that the final output was 
+% well-suited for the three-class almond classification task.
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \subsection{Learning Rate}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% The learning rate, a hyperparameter that controls how 
+% quickly a model adjusts its free parameters during training, was 
+% tested in three configurations. First, a constant learning rate 
+% was applied. Second, an exponential decay policy was implemented, 
+% where the learning rate decreases exponentially as the number of 
+% completed epochs increases. Lastly, the Cosine Annealing Warm 
+% Restarts (CAWR) strategy was employed, which proved most effective. 
+% In CAWR, the learning rate is periodically reset, with the resets 
+% occurring at progressively longer intervals. Using CAWR helped 
+% the model escape local optima and avoid performance stagnation.
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \subsection{Data Augmentation (Gretel.AI)}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Finally, having studied \cite{sun2017revisitingunreasonableeffectivenessdata},
+% 20,000 additional rows of training data were synthetically generated using the online tool, Gretel AI 
+% where the preprocessed dataset was used as input to the CSV data generator. Incorporating this data 
+% provided the model 10-times more data on which to train and, as will be shown,
+% helped to improve the model's generalisation on unseen test cases.

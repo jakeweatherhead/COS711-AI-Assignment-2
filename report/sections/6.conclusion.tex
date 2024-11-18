@@ -1,0 +1,15 @@
+\section{CONCLUSION}
+
+While the Adam and RMSProp training algorithms performed comparitively well when used individually, all of the investigated hybrid-learning strategies 
+significantly improved accuracy and reduced loss when compared to the isolated use of RProp.
+
+The results in this study also support the findings in \cite{sun2017revisitingunreasonableeffectivenessdata}, that more data is
+effective in improving the performance of a neural network. It was shown that
+adding 10,000 rows of synthetic data to the training process significantly improved the accuracy and reduced the loss of the model implemented in this study
+versus using no synthetic data.
+
+However, this study also found that augmenting the training set with 
+10,000 rows of synthetic CSV data was statistically similar to using 20,000 rows of synthetic data. 
+
+Having achieved an unseen accuracy of 82.2\% with a loss of 0.42, the hyperparameter tuning and search for optimal model configuration,
+motivated by evidence, paid dividends.
